@@ -3,7 +3,6 @@
 #define SAMPLE_WINDOW   50  // Sample window for average level
 #define INPUT_FLOOR     45  // Lower range of mic sensitivity in dB SPL
 #define INPUT_CEILING   100  // Upper range of mic sensitivity in db SPL
-// #define INPUT_DELTA     55
 
 const static long PIXEL_COLOR_GREEN = 0x00FF00;
 const static long PIXEL_COLOR_YELLOW = 0x808000;
@@ -30,15 +29,7 @@ void loop() {
   peakToPeak = CircuitPlayground.mic.soundPressureLevel(SAMPLE_WINDOW);
 
 
-  //  PeaktoPeak: 40 -> 80
-  // Serial.print("PeakToPeak: ");
-  // Serial.println(peakToPeak);
-
   peakToPeak = max(INPUT_FLOOR, peakToPeak);
-
-  // Serial.print("After Max PeakToPeak: ");
-  // Serial.println(peakToPeak);
-
 
   if (mode == 0) {
     if (peakToPeak < 60) {
@@ -126,16 +117,10 @@ void setPixelsWithThreeRounds(float peakToPeak) {
 void setPixelsWithThreeRoundsMoreFancy(float peakToPeak) {
 
   int maxPosition = 30;
-  int pixelStep = INPUT_DELTA / maxPosition;
+  int pixelStep = 2;
   int numPixels = CircuitPlayground.strip.numPixels();
   float result = peakToPeak - INPUT_FLOOR;
   int currentPosition = result / pixelStep;
-  int positionDelta = currentPosition - oldPosition;
-
-  Serial.print("      Start: OldPosition:");
-  Serial.println(oldPosition);
-  Serial.print("  Start: currentPosition:");
-  Serial.println(currentPosition);
 
   if (oldPosition == currentPosition) {
     delay(100);
@@ -143,11 +128,8 @@ void setPixelsWithThreeRoundsMoreFancy(float peakToPeak) {
   }
 
   if (oldPosition < currentPosition) {
-
     for (int i = oldPosition; i < maxPosition; i++) {
-
       if (i <= currentPosition) {
-
         if (i < 10) {
           CircuitPlayground.setPixelColor(i % numPixels, PIXEL_COLOR_GREEN);
           delay(100);
@@ -158,11 +140,8 @@ void setPixelsWithThreeRoundsMoreFancy(float peakToPeak) {
           CircuitPlayground.setPixelColor(i % numPixels, PIXEL_COLOR_RED);
           delay(100);
         }
-
       }
-
     }
-
   }
 
 
@@ -172,55 +151,20 @@ void setPixelsWithThreeRoundsMoreFancy(float peakToPeak) {
       if (oldPosition < i) {
         // doNothing
       } else if (i > 19) {
-        // turn off
-        CircuitPlayground.setPixelColor(i % numPixels, OFF);
-
+        CircuitPlayground.setPixelColor(i % numPixels, PIXEL_COLOR_YELLOW);
         delay(100);
-
-        if (i == 20) {
-          setAllPixels(PIXEL_COLOR_YELLOW);
-        }
       } else if (i > 9 && i < 20 ) {
-        CircuitPlayground.setPixelColor(i % numPixels, OFF);
-
+        CircuitPlayground.setPixelColor(i % numPixels, PIXEL_COLOR_GREEN);
         delay(100);
-
-        if (i == 10) {
-          setAllPixels(PIXEL_COLOR_GREEN);
-        }
       } else if (i < 10) {
-
         CircuitPlayground.setPixelColor(i % numPixels, OFF);
         delay(100);
       }
-
     }
-
-
   }
 
 
   oldPosition = currentPosition;
-
-}
-
-
-// @deprecated
-void setPixels(long color, float peakToPeak, int lowestPeakToPeak, int maxPeakToPeak) {
-
-  int delta = maxPeakToPeak - lowestPeakToPeak;
-  int pixelStep = delta / CircuitPlayground.strip.numPixels();
-
-
-  for (int i = 0; i < CircuitPlayground.strip.numPixels(); i++) {
-    if ((i * pixelStep) + lowestPeakToPeak <= peakToPeak)
-      CircuitPlayground.setPixelColor(i, color);
-    else
-      CircuitPlayground.setPixelColor(i, OFF);
-
-    delay(50);
-
-  }
 
 }
 
@@ -238,5 +182,6 @@ void updateMode() {
     mode = ++mode % 4;
     Serial.print("Mode: ");
     Serial.println(mode);
+    CircuitPlayground.clearPixels();
   }
 }
